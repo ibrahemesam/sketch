@@ -1224,6 +1224,10 @@ impl ApplicationHandler<UserEvent> for App {
         if self.session.project.is_some() {
             self.save_project(true);
         }
+        // Drop the window and the egui state here, while the event loop is still alive. On
+        // Wayland, egui's clipboard runs a helper thread that reads the display socket when it
+        // shuts down, and the socket is gone once the event loop returns.
+        self.gfx = None;
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
