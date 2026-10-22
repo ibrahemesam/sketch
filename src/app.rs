@@ -75,12 +75,17 @@ impl App {
         let ctx = egui::Context::default();
         theme::set_accent(theme::system_accent());
         ui::setup_style(&ctx);
+        let options = crate::options::Options::load(&store.root);
+        theme::set_preference(&ctx, options.theme);
         let library = crate::library::Library::load(&crate::library::Library::path_in(&store.root));
         let mut app = App {
             gfx: None,
             ed: Editor::default(),
             session: Session::new(store),
-            st: UiState::default(),
+            st: UiState {
+                options,
+                ..UiState::default()
+            },
             ctx,
             start: Instant::now(),
             canvas: egui::Rect::NOTHING,
@@ -708,6 +713,12 @@ impl App {
             self.st.library.dirty = false;
             if let Err(e) = self.st.library.library.save() {
                 self.error(format!("Could not save the library: {e}"));
+            }
+        }
+        if self.st.options_dirty {
+            self.st.options_dirty = false;
+            if let Err(e) = self.st.options.save(&self.session.store.root) {
+                self.error(format!("Could not save options: {e}"));
             }
         }
         self.sync_menu();
