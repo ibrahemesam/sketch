@@ -847,6 +847,14 @@ impl ApplicationHandler<UserEvent> for App {
             .with_title("Sketch")
             .with_inner_size(winit::dpi::LogicalSize::new(1440.0, 900.0))
             .with_min_inner_size(winit::dpi::LogicalSize::new(720.0, 480.0));
+        // The app id ties the window to the desktop entry in packaging/linux. On Wayland it is
+        // the only way a desktop shell can match the window to that entry, and it is where KDE
+        // takes the taskbar and Alt+Tab icon from. On X11 it sets the window class instead.
+        #[cfg(target_os = "linux")]
+        let attrs = {
+            use winit::platform::wayland::WindowAttributesExtWayland;
+            attrs.with_name("sketch-rs", "sketch-rs")
+        };
         // SKETCH_RS_OPAQUE=1 turns off vibrancy (and window transparency) on macOS.
         #[cfg(target_os = "macos")]
         let translucent = crate::env_var("OPAQUE").is_none();
